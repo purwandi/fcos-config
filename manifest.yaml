@@ -5,3 +5,12 @@ variables:
 releasever: 37
 
 include: manifests/fedora-coreos.yaml
+
+packages:
+- open-vm-tools
+- htop
+- bash-completion
+
+repos:
+- fedora-coreos-pool
+- fedora
