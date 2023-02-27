@@ -40,9 +40,9 @@ packages:
   ## crun recommends but doesn't require criu and criu-libs. We want them for
   ## checkpoint/restore. https://github.com/coreos/fedora-coreos-tracker/issues/1370
   - crun criu criu-libs
-  - podman
+  # - podman
   - runc
-  - skopeo
+  # - skopeo
   - toolbox
   # nvme-cli for managing nvme disks
   - nvme-cli

@@ -44,9 +44,9 @@ packages:
   # https://github.com/coreos/fedora-coreos-tracker/issues/400
   - fedora-repos-archive
   # CL ships this.
-  - moby-engine
+  # - moby-engine
   # Already pulled in by moby-engine, but let's be explicit. Typhoon uses it.
-  - containerd
+  # - containerd
   # Updates
   - zincati
   # Include and set the default editor
