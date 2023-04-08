@@ -24,6 +24,11 @@ saved_prep=${saved_data}/prep
 zram_dev=${saved_data}/zram_dev
 partstate_root=/run/ignition-ostree-rootfs-partstate.sh
 
+is_rhcos9() {
+    source /etc/os-release
+    [ "${ID}" == "rhcos" ] && [ "${RHEL_VERSION%%.*}" -eq 9 ]
+}
+
 # Print jq query string for wiped filesystems with label $1
 query_fslabel() {
     echo ".storage?.filesystems? // [] | map(select(.label == \"$1\" and .wipeFilesystem == true))"
@@ -290,7 +295,27 @@ case "${1:-}" in
             read dev < "${zram_dev}"
             umount "${saved_data}"
             rm -rf "${saved_data}" "${partstate_root}"
-            echo "${dev}" > /sys/class/zram-control/hot_remove
+            # After unmounting, make sure zram device state is stable before we remove it.
+            # See https://github.com/openshift/os/issues/1149
+            # Should remove when https://bugzilla.redhat.com/show_bug.cgi?id=2172058 is fixed.
+            # Seems the previous workaround https://github.com/coreos/fedora-coreos-config/pull/2226
+            # can not completely resolve the race issue, try in loop with a small sleep for el9 + !x86_64.
+            if [ $(uname -m) != x86_64 ] && is_rhcos9; then
+                for x in {0..10}; do
+                    if ! echo "${dev}" > /sys/class/zram-control/hot_remove 2>/dev/null; then
+                        sleep 0.1
+                    else
+                        dev=
+                        break
+                    fi
+                done
+                # try it one last time and let it possibly fail
+                if [ -n "${dev}" ]; then
+                    echo "${dev}" > /sys/class/zram-control/hot_remove
+                fi
+            else
+                echo "${dev}" > /sys/class/zram-control/hot_remove
+            fi
         fi
         ;;
     *)
